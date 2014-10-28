@@ -8,7 +8,7 @@ Usage
 
 You can use the sb-logger as follow:
 
-	var logger = require('../src/index.js');
+	var logger = require('sb-logger');
 	logger.log('Hello world');
 	logger.error('Hello world');
 	logger.warn('Hello world');
