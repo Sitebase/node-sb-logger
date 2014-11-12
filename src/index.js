@@ -28,6 +28,7 @@
  * maintained libraries.
  */
 var colors = require('colors');
+var levels = 'error|warn|debug|log';
 
 function log() {
 
@@ -36,6 +37,10 @@ function log() {
 
 	var prefix = "INFO".cyan + " - ";
 	var caller = arguments.callee.caller;
+
+	var callerName = arguments.callee.caller.name || 'log';
+	if( levels.indexOf( callerName ) === -1 ) 
+		return;
 
 	// Determine color to use
 	if( caller === error ) prefix = "ERROR".red + " - ";
@@ -53,9 +58,21 @@ function error() { log.apply(this, arguments); }
 function warn() { log.apply(this, arguments); }
 function debug() { log.apply(this, arguments); }
 
+function setLevel( value )
+{
+	levels = value.join( '|' );
+}
+
 module.exports = {
 	log: log,
 	error: error,
 	warn: warn,
 	debug: debug,
+	setLevel: setLevel,
+	LEVELS: {
+		ERROR: 'error',
+		WARN: 'warn',
+		DEBUG: 'debug',
+		LOG: 'log'
+	}
 };

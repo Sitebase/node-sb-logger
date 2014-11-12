@@ -13,5 +13,11 @@ describe('Logger',function(){
 		logger.debug('Hello world');
 	});
 
+	it( 'Log level', function() {
+		logger.setLevel( [logger.LEVELS.ERROR, logger.LEVELS.WARN] );
+		logger.log('Skip this');
+		logger.error('Show this');
+		logger.warn('Show this');
+	});
 
 });
