@@ -1,4 +1,4 @@
-/* 
+/*
  * sb-logger
  *
  * Copyright (c) 2014 Sitebase (Wim Mostmans) and project contributors.
@@ -8,55 +8,68 @@
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge, 
- * publish, distribute, sublicense, and/or sell copies of the Software, 
- * and to permit persons to whom the Software is furnished to do so, 
+ * including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  * This license applies to all parts of sb-logger that are not externally
  * maintained libraries.
  */
 var colors = require('colors');
 var levels = 'error|warn|debug|log';
 
-function log() {
+function log(level, args) {
 
-	if( arguments.length === 0 ) 
+	if( args.length === 0 )
 		return;
 
 	var prefix = "INFO".cyan + " - ";
-	var caller = arguments.callee.caller;
 
-	var callerName = arguments.callee.caller.name || 'log';
-	if( levels.indexOf( callerName ) === -1 ) 
+	if( levels.indexOf( level ) === -1 )
 		return;
 
 	// Determine color to use
-	if( caller === error ) prefix = "ERROR".red + " - ";
-	if( caller === warn ) prefix = "WARN".yellow + " - ";
-	if( caller === debug ) prefix = "DEBUG".green + " - ";
+	if( level === 'error' ) prefix = "ERROR".red + " - ";
+	if( level === 'warn' ) prefix = "WARN".yellow + " - ";
+	if( level === 'debug' ) prefix = "DEBUG".green + " - ";
 
 	// Add prefix as first argument
-	var data = Array.prototype.slice.apply( arguments );
-	data.unshift( prefix );
+	args.unshift( prefix );
 
-	console.log.apply( this, data );
+	console.log.apply( this, args );
 }
 
-function error() { log.apply(this, arguments); }
-function warn() { log.apply(this, arguments); }
-function debug() { log.apply(this, arguments); }
+
+/**
+ * We used to use `arguments.callee.caller` to retrieve the level,
+ * this however is being removed so we use a wrapper that contains
+ * the level.
+ *
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments/callee
+ */
+function _level(level) {
+    return function() {
+        // Simply passing arguments is an optimization killer for V8
+        // https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#32-leaking-arguments
+        var args = [];
+        var args_i = arguments.length;
+        while( args_i-- ) args[args_i] = arguments[args_i];
+
+        return log(level, args);
+    }
+};
 
 function setLevel( value )
 {
@@ -64,10 +77,10 @@ function setLevel( value )
 }
 
 module.exports = {
-	log: log,
-	error: error,
-	warn: warn,
-	debug: debug,
+	log: _level('log'),
+	error: _level('error'),
+	warn: _level('warn'),
+	debug: _level('debug'),
 	setLevel: setLevel,
 	LEVELS: {
 		ERROR: 'error',
